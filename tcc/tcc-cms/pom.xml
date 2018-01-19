@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.cherrypicks.tcc.dubbo</groupId>
+		<artifactId>tcc</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>tcc-cms</artifactId>
+	<packaging>pom</packaging>
+	
+	<properties>
+        <com.alibaba.dubbo.version>2.5.8</com.alibaba.dubbo.version>  
+        <org.apache.zookeeper.version>3.4.6</org.apache.zookeeper.version>
+        <com.github.sgroschupf.zkclient.version>0.1</com.github.sgroschupf.zkclient.version>
+    </properties>
+	
+	<modules>
+		<module>tcc-cms-base</module>
+		<module>tcc-cms-system</module>
+		<module>tcc-cms-merchant</module>
+		<module>tcc-cms-campaign</module>
+	</modules>
+</project>
