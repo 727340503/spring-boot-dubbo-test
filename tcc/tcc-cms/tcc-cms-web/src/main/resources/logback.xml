@@ -100,6 +100,8 @@
      <logger name="com.cherrypicks.tcc.cms.service.push" level="info">
         <appender-ref ref="PUSH-FILE-AUDIT" />
     </logger>
+    
+    <logger name="com.alibaba.dubbo" additivity="true" level="ERROR" />
 
     <root level="debug">
         <appender-ref ref="FILE-ERROR" />

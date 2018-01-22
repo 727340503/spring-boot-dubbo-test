@@ -7,11 +7,12 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.cherrypicks.tcc.cms.api.config.DubboConfig;
 import com.cherrypicks.tcc.cms.api.config.WebConfig;
 
 @SpringBootApplication
 @EnableScheduling
-@Import({WebConfig.class})
+@Import({WebConfig.class,DubboConfig.class})
 public class Application extends SpringBootServletInitializer {
 
     @Override

@@ -10,7 +10,7 @@
     </parent>
 
     <dependencies>
-    		<!-- <dependency>
+    	<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency> -->
+        </dependency>
         
         <!-- hot deploy -->
         <dependency>
@@ -70,12 +70,32 @@
 			       	<artifactId>spring-boot-starter-jdbc</artifactId>
             		</exclusion>
             		<exclusion>
-		            <groupId>org.springframework.boot</groupId>
-		            <artifactId>spring-boot-starter-data-redis</artifactId>
+			            <groupId>org.springframework.boot</groupId>
+			            <artifactId>spring-boot-starter-data-redis</artifactId>
             		</exclusion>
             		<exclusion>
-		            <groupId>mysql</groupId>
-		            <artifactId>mysql-connector-java</artifactId>
+			            <groupId>mysql</groupId>
+			            <artifactId>mysql-connector-java</artifactId>
+            		</exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.cherrypicks.tcc.dubbo</groupId>
+            <artifactId>tcc-cms-merchant-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+            		<exclusion>
+			    		<groupId>org.springframework.boot</groupId>
+			       	<artifactId>spring-boot-starter-jdbc</artifactId>
+            		</exclusion>
+            		<exclusion>
+			            <groupId>org.springframework.boot</groupId>
+			            <artifactId>spring-boot-starter-data-redis</artifactId>
+            		</exclusion>
+            		<exclusion>
+			            <groupId>mysql</groupId>
+			            <artifactId>mysql-connector-java</artifactId>
             		</exclusion>
             </exclusions>
         </dependency>
