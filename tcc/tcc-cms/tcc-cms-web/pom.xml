@@ -1,0 +1,192 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>tcc-cms-web</artifactId>
+    <packaging>war</packaging>
+
+    <parent>
+        <groupId>com.cherrypicks.tcc.dubbo</groupId>
+        <artifactId>tcc-cms</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+    		<!-- <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency> -->
+        
+        <!-- hot deploy -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- dubbo -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>dubbo</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring</artifactId>
+				</exclusion>
+			</exclusions>
+			<version>${com.alibaba.dubbo.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.zookeeper</groupId>
+			<artifactId>zookeeper</artifactId>
+			<version>${org.apache.zookeeper.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.github.sgroschupf</groupId>
+			<artifactId>zkclient</artifactId>
+			<version>${com.github.sgroschupf.zkclient.version}</version>
+		</dependency>
+        
+        <dependency>
+            <groupId>com.cherrypicks.tcc.dubbo</groupId>
+            <artifactId>tcc-cms-system-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+            		<exclusion>
+			    		<groupId>org.springframework.boot</groupId>
+			       	<artifactId>spring-boot-starter-jdbc</artifactId>
+            		</exclusion>
+            		<exclusion>
+		            <groupId>org.springframework.boot</groupId>
+		            <artifactId>spring-boot-starter-data-redis</artifactId>
+            		</exclusion>
+            		<exclusion>
+		            <groupId>mysql</groupId>
+		            <artifactId>mysql-connector-java</artifactId>
+            		</exclusion>
+            </exclusions>
+        </dependency>
+        
+    </dependencies>
+
+    <build>
+        <!-- war file name -->
+        <finalName>tcc_cms</finalName>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.4.3</version>
+                    <configuration>
+                        <encoding>UTF-8</encoding>
+                        <delimiters>
+                            <delimiter>${*}</delimiter><!-- to keep the default behavior -->
+                            <delimiter>@</delimiter><!-- to add Ant-like tokens style -->
+                        </delimiters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <packagingExcludes>${packaging.excludes}</packagingExcludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>localhost</id>
+            <properties>
+                <packaging.excludes>
+                    **/application-dev.properties,
+                    **/application-uat.properties,
+                    **/application-prod.properties
+                </packaging.excludes>            
+                <filters.env>localhost</filters.env>
+            </properties>
+          	<activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+            		<plugins>
+            			<plugin>
+            				<groupId>org.codehaus.mojo</groupId>  
+					    <artifactId>exec-maven-plugin</artifactId>  
+            				<executions>  
+					      	<execution>  
+					       		<phase>test</phase>  
+					       		<goals>  
+					        			<goal>java</goal>  
+					       		</goals>  
+					       		<configuration>  
+					        			<mainClass>com.cherrypicks.tcc.cms.api.GentratorProjectVersion</mainClass>
+					       		</configuration>  
+					      	</execution>  
+					     </executions> 
+            			</plugin>
+            		</plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>dev</id>
+            <properties>
+                <packaging.excludes>
+                    **/application-localhost.properties,
+                    **/application-uat.properties,
+                    **/application-prod.properties
+                </packaging.excludes>
+                <filters.env>dev</filters.env>
+            </properties>
+        </profile>
+        
+        <profile>
+            <id>uat</id>
+            <properties>
+                <packaging.excludes>
+                    **/application-localhost.properties,
+                    **/application-dev.properties,
+                    **/application-prod.properties
+                </packaging.excludes>
+                <filters.env>uat</filters.env>
+            </properties>
+        </profile>
+        
+        <profile>
+            <id>prod</id>
+            <properties>
+                <packaging.excludes>
+                    **/application-localhost.properties,
+                    **/application-dev.properties,
+                    **/application-uat.properties
+                </packaging.excludes>
+                <filters.env>prod</filters.env>
+            </properties>
+        </profile>
+    </profiles>
+</project>

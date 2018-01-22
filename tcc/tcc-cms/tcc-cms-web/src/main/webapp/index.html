@@ -1,0 +1,5645 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="shortcut icon" href="favicon.ico" />
+<title>tcc-cms</title>
+<link rel="stylesheet" type="text/css" href="css/base.css">
+<link rel="stylesheet" type="text/css" href="css/format-json-code.css">
+<script charset="utf-8" src="jquery/jquery-1.12.0.js"></script>
+<script charset="utf-8" src="jquery/format-json-code.js"></script>
+<script charset="utf-8" src="jquery/md5.js"></script>
+<script type="text/javascript">
+	var defaultLang = "en_US"; 
+	
+	$(function() {
+		
+		function apiCall(method, options) {
+			var defaults = {url : null,type : method,data : {},dataType : "text",cache : false};
+			var startTime = new Date().getTime();
+			var ajaxOptions = $.extend(defaults, options);
+			ajaxOptions["success"] = function(result) {
+				var spendTime = new Date().getTime()-startTime;
+				Process_format(result);
+				$("#spend").html(spendTime);
+			};
+			ajaxOptions["error"] = function(XMLHttpRequest, textStatus,errorThrown) {
+				var result = eval('('+XMLHttpRequest.responseText+')');
+				$("#view").html("<span style='color:#DC143C;'>Status:"+result.status+"<br/>message:"+result.message+"</span>");
+			};
+			$.ajax(ajaxOptions);
+		}
+		
+		function apiLoginCall(method, options) {
+			var defaults = {url : null,type : method,data : {},dataType : "text",cache : false};
+			var startTime = new Date().getTime();
+			var ajaxOptions = $.extend(defaults, options);
+			ajaxOptions["success"] = function(result) {
+				var spendTime = new Date().getTime()-startTime;
+				Process_format(result);
+				$("#spend").html(spendTime);
+				var spendTime = new Date().getTime()-startTime;
+				if(eval('('+result+')').result!=null&&eval('('+result+')').result!="{}"){
+					var data = eval('('+result+')').result;
+					$(".content-form").find("input[name='session']").each(function(index) {
+			            $(this).val(data.session);
+			        });
+					$(".content-form").find("input[name='userId']").each(function(index) {
+			            $(this).val(data.systemUserId);
+			        });
+					afterLogin(data.systemUserId,data.session,defaultLang);
+				}				
+			};
+			ajaxOptions["error"] = function(XMLHttpRequest, status,errorThrown) {
+				var result = eval('('+XMLHttpRequest.responseText+')');
+				//$("#view").html("status:"+ status+ "\nmessage:Unable to request the current url.");
+				$("#view").html("<span style='color:#DC143C;'>Status:"+result.status+"<br/>message:"+result.message+"</span>");
+				
+			};
+			$.ajax(ajaxOptions);
+		 }
+		
+		$(window).load(function() {
+			
+		});		
+		
+		function afterLogin(userId,session,lang){
+			var param = {"userId":userId,"session":session,"lang":lang}
+			$.ajax({
+				type: 'POST',
+				url: '/tcc_cms/getSystemRoleAllList',
+				data:param,
+				dataType: 'json',
+				success: function(data){
+					if(!data.status){
+						$("select[name=roleId]").html('');
+						$.each(data.result, function(index,item){
+							$("select[name=roleId]").append("<option value="+item.id+">"+item.roleName+"</option>");
+						});
+					}
+				}
+			});
+		}
+		
+		$("#login-button").on('click', function() {
+			var param = $("#login").serialize();
+			
+			apiLoginCall("post",{
+				url : '/tcc_cms/login',
+				data : param
+			});
+		});
+		
+		$(".li-content").on('click', function() {
+			var id = $(this).attr("for");
+			$("form").hide();
+			$("#" + id).show();
+			$(this).css("background","#C0C0C0").siblings().css("background","#FFFFFF");
+		});
+
+		$("#logout-button").on('click', function() {
+			var param = $("#logout").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/logout',
+				data : param
+			});
+		});
+		
+		/************************System User*********************************/
+		$("#system-user-list-button").on('click', function() {
+			var param = $("#system-user-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getSystemUserList',
+				data : param
+			});
+		});
+		
+		$("#add-system-user-button").on('click', function() {
+			var param = $("#add-system-user").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createSystemUser',
+				data : param
+			});
+		});
+		
+		$("#update-system-user-button").on('click', function() {
+			var param = $("#update-system-user").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateSystemUser',
+				data : param
+			});
+		});
+		
+		$("#del-system-user-button").on('click', function() {
+			var param = $("#del-system-user").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/delSystemUser',
+				data : param
+			});
+		});
+		
+		$("#system-user-detail-button").on('click', function() {
+			var param = $("#system-user-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getSystemUserDetail',
+				data : param
+			});
+		});
+		
+		/*************************System Role***************************/
+		$("#system-role-all-list-button").on('click', function() {
+			var param = $("#system-role-all-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getSystemRoleAllList',
+				data : param
+			});
+		});
+		
+		$("#system-role-detail-button").on('click', function() {
+			var param = $("#system-role-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getSystemRoleDetail',
+				data : param
+			});
+		});
+		
+		$("#system-role-update-button").on('click', function() {
+			var param = $("#system-role-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateSystemRole',
+				data : param
+			});
+		});
+		/*****************************Merchant************************************/
+		$("#merchant-list-button").on('click', function() {
+			var param = $("#merchant-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantList',
+				data : param
+			});
+		});
+		
+		$("#merchant-add-button").on('click', function() {
+			var param = $("#merchant-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createMerchant',
+				data : param
+			});
+		});
+		
+		$("#merchant-update-button").on('click', function() {
+			var param = $("#merchant-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchant',
+				data : param
+			});
+		});
+		
+		$("#Merchant-detail-button").on('click', function() {
+			var param = $("#merchant-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantDetail',
+				data : param
+			});
+		});
+
+		$("#merchant-generateSecurityKey-button").on('click', function() {
+			var param = $("#merchant-generateSecurityKey").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/generateMerchantSecurityKey',
+				data : param
+			});
+		});
+		
+		/*****************************Campaign************************************/
+		$("#campaign-list-button").on('click', function() {
+			var param = $("#campaign-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCampaignList',
+				data : param
+			});
+		});
+		
+		$("#campaign-add-button").on('click', function() {
+			var param = $("#campaign-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createCampaign',
+				data : param
+			});
+		});
+		
+		$("#campaign-update-button").on('click', function() {
+			var param = $("#campaign-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateCampaign',
+				data : param
+			});
+		});
+		
+		$("#campaign-detail-button").on('click', function() {
+			var param = $("#campaign-detail").serialize();
+			apiCall("post",{  
+				url : '/tcc_cms/getCampaignDetail',
+				data : param
+			});
+		});
+		
+		$("#merchant-campaign-list-button").on('click', function() {
+			var param = $("#merchant-campaign-list").serialize();
+			apiCall("post",{  
+				url : '/tcc_cms/getMerchantCampaignList',
+				data : param
+			});
+		});
+		
+		/*****************************Stamp************************************/
+		$("#stamp-list-button").on('click', function() {
+			var param = $("#stamp-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getStampList',
+				data : param
+			});
+		});
+		
+		$("#stamp-add-button").on('click', function() {
+			var param = $("#stamp-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createStamp',
+				data : param
+			});
+		});
+		
+		$("#stamp-update-button").on('click', function() {
+			var param = $("#stamp-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateStamp',
+				data : param
+			});
+		});
+		
+		$("#stamp-delete-button").on('click', function() {
+			var param = $("#stamp-delete").serialize();
+			apiCall("post",{  
+				url : '/tcc_cms/deleteStamp',
+				data : param
+			});
+		});
+		
+		
+		/*****************************Language************************************/
+		$("#language-list-button").on('click', function() {
+			var param = $("#language-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getLanguageAllList',
+				data : param
+			});
+		});
+		
+		/*****************************System Func************************************/
+		$("#system-func-list-button").on('click', function() {
+			var param = $("#system-func-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getSystemFuncAllList',
+				data : param
+			});
+		});
+		
+		/*****************************Gift ************************************/
+		$("#gift-list-button").on('click', function() {
+			var param = $("#gift-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getGiftList',
+				data : param
+			});
+		});
+		
+		$("#gift-detail-button").on('click', function() {
+			var param = $("#gift-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getGiftDetail',
+				data : param
+			});
+		});
+		
+		$("#gift-add-button").on('click', function() {
+			var param = $("#gift-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createGift',
+				data : param
+			});
+		});
+		
+		$("#gift-update-button").on('click', function() {
+			var param = $("#gift-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateGift',
+				data : param
+			});
+		});
+		
+		$("#gift-delete-button").on('click', function() {
+			var param = $("#gift-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/deleteGift',
+				data : param
+			});
+		});
+		
+		/*****************************Campaign Gift ************************************/
+		$("#campaign-gift-list-button").on('click', function() {
+			var param = $("#campaign-gift-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCampaignGiftList',
+				data : param
+			});
+		});
+		
+		$("#campaign-gift-detail-button").on('click', function() {
+			var param = $("#campaign-gift-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCampaignGiftMapDetail',
+				data : param
+			});
+		});
+		
+		$("#campaign-gift-add-button").on('click', function() {
+			var param = $("#campaign-gift-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/addCampaignGift',
+				data : param
+			});
+		});
+		
+		$("#campaign-gift-update-button").on('click', function() {
+			var param = $("#campaign-gift-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/udpateCampaignGift',
+				data : param
+			});
+		});
+		
+		$("#campaign-gift-delete-button").on('click', function() {
+			var param = $("#campaign-gift-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/delCampaignGiftMap',
+				data : param
+			});
+		});
+		
+		$("#campaign-gift-type-delete-button").on('click', function() {
+			var param = $("#campaign-gift-type-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/delCampaignGiftMapEXTypes',
+				data : param
+			});
+		});
+		
+		/*****************************Store ************************************/
+		$("#store-list-button").on('click', function() {
+			var param = $("#store-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getStoreList',
+				data : param
+			});
+		});
+		
+		$("#store-detail-button").on('click', function() {
+			var param = $("#store-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getStoreDetail',
+				data : param
+			});
+		});
+		
+		$("#store-add-button").on('click', function() {
+			var param = $("#store-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createStore',
+				data : param
+			});
+		});
+		
+		$("#store-update-button").on('click', function() {
+			var param = $("#store-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateStore',
+				data : param
+			});
+		});
+		
+		/*****************************User Reservation ************************************/
+		$("#user-reservation-list-button").on('click', function() {
+			var param = $("#user-reservation-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserReservationList',
+				data : param
+			});
+		});
+		
+		$("#user-reservation-detail-button").on('click', function() {
+			var param = $("#user-reservation-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserReservationDetail',
+				data : param
+			});
+		});
+		
+		$("#user-reservation-status-update-button").on('click', function() {
+			var param = $("#user-reservation-status-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateUserReservationStatus',
+				data : param
+			});
+		});
+		
+		/*****************************User Reservation ************************************/
+		$("#merchant-area-list-button").on('click', function() {
+			var param = $("#merchant-area-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getmerchantAreaList',
+				data : param
+			});
+		});
+		
+		$("#merchant-area-add-button").on('click', function() {
+			var param = $("#merchant-area-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createMerchantArea',
+				data : param
+			});
+		});
+		
+		$("#merchant-area-update-button").on('click', function() {
+			var param = $("#merchant-area-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchantArea',
+				data : param
+			});
+		});
+		
+		$("#merchant-area-delete-button").on('click', function() {
+			var param = $("#merchant-area-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/delMerchantArea',
+				data : param
+			});
+		});
+		
+		/*****************************Game ************************************/
+		$("#game-list-button").on('click', function() {
+			var param = $("#game-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getGameList',
+				data : param
+			});
+		});
+		
+		$("#game-detail-button").on('click', function() {
+			var param = $("#game-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getGameDetail',
+				data : param
+			});
+		});
+		
+		$("#game-add-button").on('click', function() {
+			var param = $("#game-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createGame',
+				data : param
+			});
+		});
+		
+		$("#game-update-button").on('click', function() {
+			var param = $("#game-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateGame',
+				data : param
+			});
+		});
+		
+		$("#game-delete-button").on('click', function() {
+			var param = $("#game-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/deleteGame',
+				data : param
+			});
+		});
+		
+		$("#merchant-game-list-button").on('click', function() {
+			var param = $("#merchant-game-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getHomePageGameList',
+				data : param
+			});
+		});
+		
+		/*****************************Banner ************************************/
+		$("#banner-list-button").on('click', function() {
+			var param = $("#banner-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getBannerList',
+				data : param
+			});
+		});
+		
+		$("#banner-detail-button").on('click', function() {
+			var param = $("#banner-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getBannerDetail',
+				data : param
+			});
+		});
+		
+		$("#banner-add-button").on('click', function() {
+			var param = $("#banner-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createBanner',
+				data : param
+			});
+		});
+		
+		$("#banner-update-button").on('click', function() {
+			var param = $("#banner-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateBanner',
+				data : param
+			});
+		});
+		
+		$("#banner-delete-button").on('click', function() {
+			var param = $("#banner-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/deleteBanner',
+				data : param
+			});
+		});
+		
+		$("#home-page-banner-list-button").on('click', function() {
+			var param = $("#home-page-banner-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getHomePageBanerList',
+				data : param
+			});
+		});
+		
+		$("#banner-update-sort-order-button").on('click', function() {
+			var param = $("#banner-update-sort-order").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateBannerSortOrder',
+				data : param
+			});
+		});
+		
+		/*****************************Coupon ************************************/
+		$("#coupon-list-button").on('click', function() {
+			var param = $("#coupon-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCouponList',
+				data : param
+			});
+		});
+		
+		$("#coupon-detail-button").on('click', function() {
+			var param = $("#coupon-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCouponDetail',
+				data : param
+			});
+		});
+		
+		$("#coupon-add-button").on('click', function() {
+			var param = $("#coupon-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createCoupon',
+				data : param
+			});
+		});
+		
+		$("#coupon-update-button").on('click', function() {
+			var param = $("#coupon-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateCoupon',
+				data : param
+			});
+		});
+		
+		$("#coupon-delete-button").on('click', function() {
+			var param = $("#coupon-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/deleteCoupon',
+				data : param
+			});
+		});
+		
+		$("#home-page-coupon-list-button").on('click', function() {
+			var param = $("#home-page-coupon-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getHomePageCouponList',
+				data : param
+			});
+		});
+		
+		$("#coupon-update-sort-order-button").on('click', function() {
+			var param = $("#coupon-update-sort-order").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateCouponSortOrder',
+				data : param
+			});
+		});
+		
+		/*****************************Home page ************************************/
+		$("#home-page-update-button").on('click', function() {
+			var param = $("#home-page-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchantHomePage',
+				data : param
+			});
+		});
+		
+		$("#home-page-detail-button").on('click', function() {
+			var param = $("#home-page-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantHomePage',
+				data : param
+			});
+		});
+		
+		$("#home-page-publish-button").on('click', function() {
+			var param = $("#home-page-publish").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/publishMerchantHomePage',
+				data : param
+			});
+		});
+		
+		
+		/*****************************Push notif************************************/
+		$("#push-notif-detail-button").on('click', function() {
+			var param = $("#push-notif-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantReservationPushNotif',
+				data : param
+			});
+		});
+		
+		/*****************************Push notif************************************/
+		$("#currency-unit-list-button").on('click', function() {
+			var param = $("#currency-unit-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getCurrencyUnitlist',
+				data : param
+			});
+		});
+		
+		$("#push-notif-publish-button").on('click', function() {
+			var param = $("#push-notif-publish").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/publishPushNotif',
+				data : param
+			});
+		});
+		
+		/*****************************Customer************************************/
+		$("#user-list-button").on('click', function() {
+			var param = $("#user-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserList',
+				data : param
+			});
+		});
+		
+		$("#user-detail-button").on('click', function() {
+			var param = $("#user-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserDetail',
+				data : param
+			});
+		});
+		
+		$("#user-stamp-history-list-button").on('click', function() {
+			var param = $("#user-stamp-history-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserStampHistoryList',
+				data : param
+			});
+		});
+		
+		$("#user-redeem-history-list-button").on('click', function() {
+			var param = $("#user-redeem-history-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserRedeemHistoryList',
+				data : param
+			});
+		});
+		
+		$("#user-stamp-history-new-button").on('click', function() {
+			var param = $("#user-stamp-history-new").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/createUserStampHistory',
+				data : param
+			});
+		});
+		
+		/*****************************Report************************************/
+		$("#user-report-button").on('click', function() {
+			var param = $("#user-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewUserReport',
+				data : param
+			});
+		});
+		
+		$("#user-reservation-report-button").on('click', function() {
+			var param = $("#user-reservation-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewUserReservationReport',
+				data : param
+			});
+		});
+		
+		$("#collect-stamps-report-button").on('click', function() {
+			var param = $("#collect-stamps-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewCollectStampsReport',
+				data : param
+			});
+		});
+		
+		$("#redemption-report-button").on('click', function() {
+			var param = $("#redemption-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewRedemptionReport',
+				data : param
+			});
+		});
+		
+		$("#transfer-stamps-report-button").on('click', function() {
+			var param = $("#transfer-stamps-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewTransferStampsReport',
+				data : param
+			});
+		});
+		
+		$("#campaign-report-button").on('click', function() {
+			var param = $("#campaign-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewCampaignReport',
+				data : param
+			});
+		});
+		
+		/*****************************Merchant config************************************/
+		$("#update-merchant-config-button").on('click', function() {
+			var param = $("#update-merchant-config").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchantConfig',
+				data : param
+			});
+		});
+		
+		$("#merchant-config-info-button").on('click', function() {
+			var param = $("#merchant-config-info").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantConfigInfo',
+				data : param
+			});
+		});
+		
+		/*****************************Monitor************************************/
+		$("#monitor-api-button").on('click', function() {
+			var param = $("#monitor-api").serialize();
+			apiCall("get",{
+				url : '/tcc_cms/apiMonitor.do',
+				data : param
+			});
+		});
+		
+		$("#monitor-db-button").on('click', function() {
+			var param = $("#monitor-db").serialize();
+			apiCall("get",{
+				url : '/tcc_cms/apiDBMonitor.do',
+				data : param
+			});
+		});
+		
+		$("#monitor-redis-button").on('click', function() {
+			var param = $("#monitor-redis").serialize();
+			apiCall("get",{
+				url : '/tcc_cms/apiRedisMonitor.do',
+				data : param
+			});
+		});
+		
+		/*****************************Keeper User************************************/
+		$("#keeper-user-list-button").on('click', function() {
+			var param = $("#keeper-user-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getKeeperUserList',
+				data : param
+			});
+		});
+		
+		$("#keeper-user-add-button").on('click', function() {
+			var param = $("#keeper-user-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/addKeeperUser',
+				data : param
+			});
+		});
+		
+		$("#keeper-user-update-button").on('click', function() {
+			var param = $("#keeper-user-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateKeeperUser',
+				data : param
+			});
+		});
+		
+		$("#keeper-user-detail-button").on('click', function() {
+			var param = $("#keeper-user-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getKeeperUserDetail',
+				data : param
+			});
+		});
+		
+		/*****************************Stamp adjust reason************************************/
+		$("#stamp-adjust-reason-list-button").on('click', function() {
+			var param = $("#stamp-adjust-reason-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getStampAdjustReasonList',
+				data : param
+			});
+		});
+		
+		$("#stamp-adjust-reason-add-button").on('click', function() {
+			var param = $("#stamp-adjust-reason-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/addStampAdjustReason',
+				data : param
+			});
+		});
+		
+		$("#stamp-adjust-reason-update-button").on('click', function() {
+			var param = $("#stamp-adjust-reason-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateStampAdjustReason',
+				data : param
+			});
+		});
+		
+		$("#stamp-adjust-reason-detail-button").on('click', function() {
+			var param = $("#stamp-adjust-reason-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getStampAdjustReasonDetail',
+				data : param
+			});
+		});
+		
+		$("#stamp-adjust-reason-delete-button").on('click', function() {
+			var param = $("#stamp-adjust-reason-delete").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/deleteStampAdjustReason',
+				data : param
+			});
+		});
+		
+		/*****************************Merchant Config************************************/
+		$("#merchant-config-list-button").on('click', function() {
+			var param = $("#merchant-config-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantConfigList',
+				data : param
+			});
+		});
+		
+		$("#merchant-config-add-button").on('click', function() {
+			var param = $("#merchant-config-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/addMerchantConfig',
+				data : param
+			});
+		});
+		
+		$("#merchant-config-update-button").on('click', function() {
+			var param = $("#merchant-config-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchantConfig',
+				data : param
+			});
+		});
+		
+		$("#merchant-config-detail-button").on('click', function() {
+			var param = $("#merchant-config-detail").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getMerchantConfigInfo',
+				data : param
+			});
+		});
+		
+		$("#merchant-config-cache-update-button").on('click', function() {
+			var param = $("#merchant-config-cache-update").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/updateMerchantConfigCache',
+				data : param
+			});
+		});
+		
+		/*****************************Merchant Config************************************/
+		$("#user-coupon-list-button").on('click', function() {
+			var param = $("#user-coupon-list").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/getUserCouponList',
+				data : param
+			});
+		});
+		
+		$("#user-coupon-add-button").on('click', function() {
+			var param = $("#user-coupon-add").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/addUserCoupon',
+				data : param
+			});
+		});
+		
+		$("#user-coupon-revoke-button").on('click', function() {
+			var param = $("#user-coupon-revoke").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/revokeUserCoupon',
+				data : param
+			});
+		});
+		
+		$("#user-coupon-collect-report-button").on('click', function() {
+			var param = $("#user-coupon-collect-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewCollectCouponReport',
+				data : param
+			});
+		});
+		
+		$("#user-coupon-redeem-report-button").on('click', function() {
+			var param = $("#user-coupon-redeem-report").serialize();
+			apiCall("post",{
+				url : '/tcc_cms/viewRedeemedtCouponReport',
+				data : param
+			});
+		});
+		// ************************  test api end *********************
+	});
+</script>
+
+</head>
+<body>
+	<div class="main">
+		<div class="menu">
+			<h2>Tcc-cms</h2>
+			<ul>
+				<li class="li-title" style="background:#ffffff;"> <span>System</span></li>
+				<li class="li-content" for="login" style="background:#C0C0C0;">Login</li>
+				<li class="li-content" for="logout">Logout</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>System User</span></li>
+				<li class="li-content" for="system-user-list">System User List</li>
+				<li class="li-content" for="system-user-detail">System User Detail</li>
+				<li class="li-content" for="add-system-user">Add system User</li>
+				<li class="li-content" for="update-system-user">Update system User</li>
+				<li class="li-content" for="del-system-user">Del system User</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>System Role</span></li>
+				<li class="li-content" for="system-role-all-list">System Role All</li>
+				<li class="li-content" for="system-role-detail">System Role Detail</li>
+				<li class="li-content" for="system-role-update">System Role Update</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>System Func</span></li>
+				<li class="li-content" for="system-func-list">System Func All</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Merchant</span></li>
+				<li class="li-content" for="merchant-list">Merchant list</li>
+				<li class="li-content" for="merchant-add">Merchant add</li>
+				<li class="li-content" for="merchant-update">Merchant update</li>
+				<li class="li-content" for="merchant-detail">Merchant detail</li>
+				<li class="li-content" for="merchant-generateSecurityKey">Merchant Generate Security Key</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Merchant Area</span></li>
+				<li class="li-content" for="merchant-area-list">Merchant area list</li>
+				<li class="li-content" for="merchant-area-add">Merchant area add</li>
+				<li class="li-content" for="merchant-area-update">Merchant area update</li>
+				<li class="li-content" for="merchant-area-delete">Merchant area delete</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Campaign</span></li>
+				<li class="li-content" for="campaign-list">Campaign list</li>
+				<li class="li-content" for="campaign-add">Campaign add</li>
+				<li class="li-content" for="campaign-update">Campaign update</li>
+				<li class="li-content" for="campaign-detail">Campaign detail</li>
+				<li class="li-content" for="merchant-campaign-list">Merchant campaign list</li>
+				<li class="li-title" style="background:#ffffff;"> <span>Stamp</span></li>
+				<li class="li-content" for="stamp-list">Stamp list</li>
+				<li class="li-content" for="stamp-add">Stamp add</li>
+				<li class="li-content" for="stamp-update">Stamp update</li>
+				<li class="li-content" for="stamp-delete">Stamp delete</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Gift</span></li>
+				<li class="li-content" for="gift-add">Gift add</li>
+				<li class="li-content" for="gift-list">Gift list</li>
+				<li class="li-content" for="gift-detail">Gift detail</li>
+				<li class="li-content" for="gift-update">Gift update</li>
+				<li class="li-content" for="gift-delete">Gift delete</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Campaign gift map</span></li>
+				<li class="li-content" for="campaign-gift-list">Campaign gift list</li>
+				<li class="li-content" for="campaign-gift-detail">Campaign gift detail</li>
+				<li class="li-content" for="campaign-gift-add">Campaign gift map add</li>
+				<li class="li-content" for="campaign-gift-update">Campaign gift update</li>
+				<li class="li-content" for="campaign-gift-delete">Campaign gift delete</li>
+				<li class="li-content" for="campaign-gift-type-delete">Campaign gift exchange type delete</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Store map</span></li>
+				<li class="li-content" for="store-list">Store list</li>
+				<li class="li-content" for="store-detail">Store detail</li>
+				<li class="li-content" for="store-add">Store add</li>
+				<li class="li-content" for="store-update">Store update</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>User Reservation</span></li>
+				<li class="li-content" for="user-reservation-list">User reservation list</li>
+				<li class="li-content" for="user-reservation-detail">User reservation detail</li>
+				<li class="li-content" for="user-reservation-status-update">User reservationn status update</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Game </span></li>
+				<li class="li-content" for="game-list">Game list</li>
+				<li class="li-content" for="game-detail">Game detail</li>
+				<li class="li-content" for="game-add">Game add</li>
+				<li class="li-content" for="game-update">Game update</li>
+				<li class="li-content" for="game-delete">Game delete</li>
+				<li class="li-content" for="merchant-game-list">Merchant game list</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Banner</span></li>
+				<li class="li-content" for="banner-list">Banner list</li>
+				<li class="li-content" for="banner-detail">Banner detail</li>
+				<li class="li-content" for="banner-add">Banner add</li>
+				<li class="li-content" for="banner-update">Banner update</li>
+				<li class="li-content" for="banner-delete">Banner delete</li>
+				<li class="li-content" for="home-page-banner-list">Home page banner list</li>
+				<li class="li-content" for="banner-update-sort-order">Banner update sort order</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Coupon</span></li>
+				<li class="li-content" for="coupon-list">Coupon list</li>
+				<li class="li-content" for="coupon-detail">Coupon detail</li>
+				<li class="li-content" for="coupon-add">Coupon add</li>
+				<li class="li-content" for="coupon-update">Coupon update</li>
+				<li class="li-content" for="coupon-delete">Coupon delete</li>
+				<li class="li-content" for="home-page-coupon-list">Home page Coupon list</li>
+				<li class="li-content" for="coupon-update-sort-order">Coupon update sort order</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Home Page </span></li>
+				<li class="li-content" for="home-page-updat">Home page update</li>
+				<li class="li-content" for="home-page-detail">Home page detail</li>
+				<li class="li-content" for="home-page-publish">Home page publish</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Push Notif</span></li>
+				<li class="li-content" for="push-notif-detail">Push notif detail</li>
+				<li class="li-content" for="push-notif-publish">Push notif publish</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Language</span></li>
+				<li class="li-content" for="language-list">Language list</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Currency Unit</span></li>
+				<li class="li-content" for="currency-unit-list">Currency Unit list</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Customer </span></li>
+				<li class="li-content" for="user-list">customer list</li>
+				<li class="li-content" for="user-detail">customer detail</li>
+				<li class="li-content" for="user-stamp-history-list">user stamp history list</li>
+				<li class="li-content" for="user-redeem-history-list">user redeem history list</li>
+				<li class="li-content" for="user-stamp-history-new">user stamp history new</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Report </span></li>
+				<li class="li-content" for="user-report">User Report</li>
+				<li class="li-content" for="user-report-export">User Report Export</li>
+				<li class="li-content" for="user-reservation-report">User Reservation Report</li>
+				<li class="li-content" for="collect-stamps-report">Collect Stamps Report</li>
+				<li class="li-content" for="redemption-report">Redemption Report</li>
+				<li class="li-content" for="transfer-stamps-report">Transfer Stamps Report</li>
+				<li class="li-content" for="campaign-report">Campaign Report</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Keeper User </span></li>
+				<li class="li-content" for="keeper-user-list">Keeper User List</li>
+				<li class="li-content" for="keeper-user-detail">Keeper User Detail</li>
+				<li class="li-content" for="keeper-user-add">Add Keeper User</li>
+				<li class="li-content" for="keeper-user-update">Update Keeper User</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Stamp Adjust Reason</span></li>
+				<li class="li-content" for="stamp-adjust-reason-list">Stamp Adjust Reason List</li>
+				<li class="li-content" for="stamp-adjust-reason-detail">Stamp Adjust Reason Detail</li>
+				<li class="li-content" for="stamp-adjust-reason-add">Add Stamp Adjust Reason</li>
+				<li class="li-content" for="stamp-adjust-reason-update">Update Stamp Adjust Reason</li>
+				<li class="li-content" for="stamp-adjust-reason-delete">Delete Stamp Adjust Reason</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>User Coupon</span></li>
+				<li class="li-content" for="user-coupon-list">User Coupon List</li>
+				<li class="li-content" for="user-coupon-add">User Coupon Add</li>
+				<li class="li-content" for="user-coupon-revoke">User Coupon Revoke</li>
+				<li class="li-content" for="user-coupon-collect-report">User Coupon Collect Report</li>
+				<li class="li-content" for="user-coupon-redeem-report">User Coupon Redeem Report</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Merchant Config</span></li>
+				<li class="li-content" for="merchant-config-list">Merchant Config List</li>
+				<li class="li-content" for="merchant-config-detail">Merchant Config Detail</li>
+				<li class="li-content" for="merchant-config-add">Merchant Config Reason</li>
+				<li class="li-content" for="merchant-config-update">Merchant Config Reason</li>
+				<li class="li-content" for="merchant-config-cache-update">Merchant Config Cache Reason</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Merchant Config </span></li>
+				<li class="li-content" for="merchant-config-info">Merchant config info</li>
+				<li class="li-content" for="update-merchant-config">Update merchant config</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>File Upload</span></li>
+				<li class="li-content" for="file-upload">File Upload</li>
+				
+				<li class="li-title" style="background:#ffffff;"> <span>Monitor</span></li>
+				<li class="li-content" for="monitor-api">Monitor api</li>
+				<li class="li-content" for="monitor-db">Monitor db</li>
+				<li class="li-content" for="monitor-redis">Monitor redis</li>
+				<!--<li class="li-title" style="background:#ffffff;"> <span>System Func</span></li>
+				<li class="li-content" for="system-func-list">system Func List</li> -->
+			</ul>
+		</div>
+		<div class="content">
+			<div class="content-form">
+				<fieldset>
+					<legend>Params</legend>
+
+					<form id="login" style="display: block;">
+						<h2>Login</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>user name</td>
+								<td><input name="userName" type="text" value="admin"/></td>
+								<td>password</td>
+								<td><input name="password" type="password" value="admin"/></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="login-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="logout" style="display: none;">
+						<h2>Logout</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="logout-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- System User -->
+					<form id="system-user-list" style="display: none;">
+						<h2>System-user-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-user-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="system-user-detail" style="display: none;">
+						<h2>System-user-detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>systemUserId</td>
+								<td><input name="systemUserId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-user-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="add-system-user" style="display: none;">
+						<h2>System-user-add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>mobile</td>
+								<td><input name="mobile" type="text" /></td>
+							</tr>
+							<tr>
+								<td>email</td>
+								<td><input name="email" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									</select>
+								</td>
+								<td>role</td>
+								<td>
+									<select id="roleId" name="roleId">
+									   <!-- <option value="1">------Supervisor-----</option>
+									   <option value="2">------Operator-----</option> -->
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="add-system-user-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="update-system-user" style="display: none;">
+						<h2>System-user-update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>updUserId</td>
+								<td><input name="updUserId" type="text" /></td>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+							</tr>
+							<tr>
+								<td>rePassword</td>
+								<td><input name="rePassword" type="text" /></td>
+								<td>mobile</td>
+								<td><input name="mobile" type="text" /></td>
+								<td>email</td>
+								<td><input name="email" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									</select>
+								</td>
+								<td>role</td>
+								<td>
+									<select id="roleId" name="roleId">
+									   <!-- <option value="1">------Supervisor-----</option>
+									   <option value="2">------Operator-----</option> -->
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="update-system-user-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="del-system-user" style="display: none;">
+						<h2>System-user-delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>delUserId</td>
+								<td><input name="delUserId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="del-system-user-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="system-role-all-list" style="display: none;">
+						<h2>System-role-all-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-role-all-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="system-role-detail" style="display: none;">
+						<h2>System-role-detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>roleId</td>
+								<td><input name="roleId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-role-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="system-role-update" style="display: none;">
+						<h2>System-role-update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>roleId</td>
+								<td><input name="roleId" type="text" /></td>
+								<td>roleName</td>
+								<td><input name="roleName" type="text" /></td>
+								<td>roleDesc</td>
+								<td><input name="roleDesc" type="text" /></td>
+							</tr>
+							<tr>
+								<td>roleType</td>
+								<td><input name="roleType" type="text" /></td>
+								<td>funcIds</td>
+								<td><input name="funcIds" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-role-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Merchant -->
+					<form id="merchant-list" style="display: none;">
+						<h2>Merchant-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+										<option value="">-----------</option>
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-add" style="display: none;">
+						<h2>Merchant-add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>securityKey</td>
+								<td><input name="securityKey" type="text" /></td>
+								<td>loginMethod</td>
+								<td>
+									<select id="loginMethod" name="loginMethod">
+									   <option value="1">------Anonymous-----</option>
+									   <option value="2">------Email-----</option>
+									   <option value="3">------Facebook-----</option>
+									</select>
+								</td>
+								<td>issueStampMethos</td>
+								<td>
+									<select id="issueStampMethos" name="issueStampMethos">
+									   <option value="1">------POS integration-----</option>
+									   <option value="2">------Merchant app-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									</select>
+								</td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-update" style="display: none;">
+						<h2>Merchant-update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>securityKey</td>
+								<td><input name="securityKey" type="text" /></td>
+								<td>loginMethod</td>
+								<td>
+									<select id="loginMethod" name="loginMethod">
+									   <option value="1">------Anonymous-----</option>
+									   <option value="2">------Email-----</option>
+									   <option value="3">------Facebook-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>issueStampMethos</td>
+								<td>
+									<select id="issueStampMethos" name="issueStampMethos">
+									   <option value="1">------POS integration-----</option>
+									   <option value="2">------Merchant app-----</option>
+									</select>
+								</td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									</select>
+								</td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					
+					<form id="merchant-detail" style="display: none;">
+						<h2>Merchant-detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="Merchant-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-generateSecurityKey" style="display: none;">
+						<h2>Merchant-generateSecurityKey</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-generateSecurityKey-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Campaign -->
+					<form id="campaign-list" style="display: none;">
+						<h2>Campaign-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-add" style="display: none;">
+						<h2>Campaign-add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>collStartTime</td>
+								<td><input name="collStartTime" type="text" /></td>
+								<td>collEndTime</td>
+								<td><input name="collEndTime" type="text" /></td>
+								<td>redeemStartTime</td>
+								<td><input name="redeemStartTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>redeemEndTime</td>
+								<td><input name="redeemEndTime" type="text" /></td>
+								<td>isReservation</td>
+								<td>
+									<select id="isReservation" name="isReservation">
+									   <option value=true>------True-----</option>
+									   <option value=false>------False-----</option>
+									</select>
+								</td>
+								<td>stampRatio</td>
+								<td><input name="stampRatio" type="text" /></td>
+							</tr>
+							<tr>
+								<td>prmBannerUrl</td>
+								<td><input name="prmBannerUrl" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									   <option value="2">------COLLECT_STAMPS-----</option>
+									   <option value="3">------REDEMPTION-----</option>
+									   <option value="4">------COLLECT_STAMPS_ONLY-----</option>
+									   <option value="5">------REDEMPTION_ONLY-----</option>
+									</select>
+								</td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-detail" style="display: none;">
+						<h2>Campaign-detail-add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-campaign-list" style="display: none;">
+						<h2>Merchant Campaign List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="4">------in_active-----</option>
+									   <option value="2">------active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-campaign-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-update" style="display: none;">
+						<h2>Campaign-update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>collStartTime</td>
+								<td><input name="collStartTime" type="text" /></td>
+								<td>collEndTime</td>
+								<td><input name="collEndTime" type="text" /></td>
+								<td>redeemStartTime</td>
+								<td><input name="redeemStartTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>redeemEndTime</td>
+								<td><input name="redeemEndTime" type="text" /></td>
+								<td>isReservation</td>
+								<td>
+									<select id="isReservation" name="isReservation">
+									   <option value=true>------True-----</option>
+									   <option value=false>------False-----</option>
+									</select>
+								</td>
+								<td>stampRatio</td>
+								<td><input name="stampRatio" type="text" /></td>
+							</tr>
+							<tr>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------INACTIVE-----</option>
+									   <option value="1">------ACTIVE-----</option>
+									   <option value="2">------COLLECT_STAMPS-----</option>
+									   <option value="3">------REDEMPTION-----</option>
+									   <option value="4">------COLLECT_STAMPS_ONLY-----</option>
+									   <option value="5">------REDEMPTION_ONLY-----</option>
+									</select>
+								</td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td>prmBannerUrl</td>
+								<td><input name="prmBannerUrl" type="text" /></td>
+							</tr>
+							<!-- <tr>
+								<td>bannerImg</td>
+								<td><input name="bannerImg" type="text" /></td>
+								<td>bgImg</td>
+								<td><input name="bgImg" type="text" /></td>
+								<td>descr</td>
+								<td><input name="descr" type="text" /></td>
+							</tr>
+							<tr>
+								<td>terms</td>
+								<td><input name="terms" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr> -->
+							<tr>
+								<td colspan="6">
+									<input id="campaign-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Stamp -->
+					<form id="stamp-list" style="display: none;">
+						<h2>Stamp-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-add" style="display: none;">
+						<h2>Stamp-add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>stampMoney</td>
+								<td><input name="stampMoney" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-update" style="display: none;">
+						<h2>Stamp-update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-delete" style="display: none;">
+						<h2>Stamp-delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>stampIds</td>
+								<td><input name="stampIds" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Langauge -->
+					<form id="language-list" style="display: none;">
+						<h2>Language-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="language-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="currency-unit-list" style="display: none;">
+						<h2>Currency unit list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="currency-unit-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- File upload -->
+					<form id="file-upload" style="display: none;" enctype="multipart/form-data" action="uploadImg" method="post">
+						<h2>File Upload</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>file</td>
+								<td><input name="file" type="file" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="file-upload-button" type="submit" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					
+					<!-- System Func -->
+					<form id="system-func-list" style="display: none;">
+						<h2>system-func-list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="system-func-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- gift -->
+					<form id="gift-list" style="display: none;">
+						<h2>Gift List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="gift-add" style="display: none;">
+						<h2>Gift Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="gift-detail" style="display: none;">
+						<h2>Gift Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>giftId</td>
+								<td><input name="giftId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="gift-add" style="display: none;">
+						<h2>Gift Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="gift-update" style="display: none;">
+						<h2>Gift Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>gitId</td>
+								<td><input name="gitId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="gift-delete" style="display: none;">
+						<h2>Gift Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="gift-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Campaign gift -->
+					<form id="campaign-gift-list" style="display: none;">
+						<h2>Campaign Gift List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-gift-detail" style="display: none;">
+						<h2>Campaign Gift Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>giftId</td>
+								<td><input name="giftId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-gift-add" style="display: none;">
+						<h2>Campaign Gift Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>giftId</td>
+								<td><input name="giftId" type="text" /></td>
+								<td>externalGiftId</td>
+								<td><input name="externalGiftId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+								<td>isReservation</td>
+								<td><input name="isReservation" type="text" /></td>
+								<td>reservationExpiredTime</td>
+								<td><input name="reservationExpiredTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>giftExchangeTypeData</td>
+								<td><input name="giftExchangeTypeData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-gift-update" style="display: none;">
+						<h2>Campaign Gift Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignGiftMapId</td>
+								<td><input name="campaignGiftMapId" type="text" /></td>
+								<td>externalGiftId</td>
+								<td><input name="externalGiftId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+								<td>isReservation</td>
+								<td><input name="isReservation" type="text" /></td>
+								<td>reservationExpiredTime</td>
+								<td><input name="reservationExpiredTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>giftExchangeTypeData</td>
+								<td><input name="giftExchangeTypeData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-gift-delete" style="display: none;">
+						<h2>Campaign Gift Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-gift-type-delete" style="display: none;">
+						<h2>Campaign Gift Type Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-type-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Store -->
+					<form id="store-list" style="display: none;">
+						<h2>Store List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>merchantName</td>
+								<td><input name="merchantName" type="text" /></td>
+							</tr>
+							<tr>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="store-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="store-detail" style="display: none;">
+						<h2>Store Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>storeId</td>
+								<td><input name="storeId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="store-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="store-add" style="display: none;">
+						<h2>Store Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>externalStoreId</td>
+								<td><input name="externalStoreId" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>phone</td>
+								<td><input name="phone" type="text" /></td>
+							</tr>
+							<tr>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="store-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="store-update" style="display: none;">
+						<h2>Store Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>storeId</td>
+								<td><input name="storeId" type="text" /></td>
+								<td>externalStoreId</td>
+								<td><input name="externalStoreId" type="text" /></td>
+								<td>phone</td>
+								<td><input name="phone" type="text" /></td>
+							</tr>
+							<tr>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-gift-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- User Reservation -->
+					<form id="user-reservation-list" style="display: none;">
+						<h2>User reservation list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>storeName</td>
+								<td><input name="storeName" type="text" /></td>
+							</tr>
+							<tr>
+								<td>reservationStartDate</td>
+								<td><input name="reservationStartDate" type="text" /></td>
+								<td>reservationEndDate</td>
+								<td><input name="reservationEndDate" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-reservation-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-reservation-detail" style="display: none;">
+						<h2>User Reservation Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userReservationId</td>
+								<td><input name="userReservationId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-reservation-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-reservation-status-update" style="display: none;">
+						<h2>User Reservation Status Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>"ids"</td>
+								<td><input name="ids" type="text" /></td>
+								<td>reservationExpiredTime</td>
+								<td><input name="reservationExpiredTime" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-reservation-status-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Merchant area -->
+					<form id="merchant-area-list" style="display: none;">
+						<h2>Merchant Area List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-area-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-area-add" style="display: none;">
+						<h2>Merchant Area Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-area-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-area-update" style="display: none;">
+						<h2>Merchant Area Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantAreaId</td>
+								<td><input name="merchantAreaId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-area-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-area-delete" style="display: none;">
+						<h2>Merchant Area Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-area-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Game -->
+					<form id="game-list" style="display: none;">
+						<h2>Game List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="game-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="game-add" style="display: none;">
+						<h2>Game Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>webUrl</td>
+								<td><input name="webUrl" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td>inappOpen</td>
+								<td><input name="inappOpen" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="game-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="game-update" style="display: none;">
+						<h2>Game Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>gameId</td>
+								<td><input name="gameId" type="text" /></td>
+								<td>webUrl</td>
+								<td><input name="webUrl" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------InActive-----</option>
+									   <option value="1">------Active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="game-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="game-delete" style="display: none;">
+						<h2>Game Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="game-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="game-detail" style="display: none;">
+						<h2>Game Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>gameId</td>
+								<td><input name="gameId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="game-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-game-list" style="display: none;">
+						<h2>Merchant Game Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------in_active-----</option>
+									   <option value="1">------active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-game-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Banner -->
+					<form id="banner-list" style="display: none;">
+						<h2>Banner List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="banner-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="banner-add" style="display: none;">
+						<h2>Banner Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>webUrl</td>
+								<td><input name="webUrl" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td>inappOpen</td>
+								<td><input name="inappOpen" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="banner-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="banner-update" style="display: none;">
+						<h2>Banner Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>bannerId</td>
+								<td><input name="bannerId" type="text" /></td>
+								<td>webUrl</td>
+								<td><input name="webUrl" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td>inappOpen</td>
+								<td><input name="inappOpen" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------InActive-----</option>
+									   <option value="1">------Active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="banner-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="banner-delete" style="display: none;">
+						<h2>Banner Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="banner-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="banner-detail" style="display: none;">
+						<h2>Game Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>bannerId</td>
+								<td><input name="bannerId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="banner-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="home-page-banner-list" style="display: none;">
+						<h2>Home Page Banner List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------pending-----</option>
+									   <option value="2">------active-----</option>
+									   <option value="3">------expired-----</option>
+									   <option value="4">------in_active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-banner-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="banner-update-sort-order" style="display: none;">
+						<h2>Update Banner Sort Order</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortOrderData</td>
+								<td><input name="sortOrderData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-banner-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Coupon -->
+					<form id="coupon-list" style="display: none;">
+						<h2>coupon List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value=""></option>
+									   <option value="1">------pending-----</option>
+									   <option value="2">------active-----</option>
+									   <option value="3">------expired-----</option>
+									   <option value="4">------in_active-----</option>
+									</select>
+								</td>
+								<td>name</td>
+								<td><input name="name" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="coupon-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="coupon-add" style="display: none;">
+						<h2>coupon Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>stamps</td>
+								<td><input name="stamps" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="coupon-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="coupon-update" style="display: none;">
+						<h2>coupon Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>stamps</td>
+								<td><input name="stamps" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>couponId</td>
+								<td><input name="couponId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="0">------InActive-----</option>
+									   <option value="1">------Active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="coupon-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="coupon-delete" style="display: none;">
+						<h2>coupon Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="coupon-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="coupon-detail" style="display: none;">
+						<h2>Game Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>couponId</td>
+								<td><input name="couponId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="coupon-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="home-page-coupon-list" style="display: none;">
+						<h2>Home Page coupon List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------pending-----</option>
+									   <option value="2">------active-----</option>
+									   <option value="3">------expired-----</option>
+									   <option value="4">------in_active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-coupon-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="coupon-update-sort-order" style="display: none;">
+						<h2>Update coupon Sort Order</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortOrderData</td>
+								<td><input name="sortOrderData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-coupon-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Home page -->
+					<form id="home-page-update" style="display: none;">
+						<h2>Home page update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>homePageFrame</td>
+								<td><input name="homePageFrame" type="text" /></td>
+								<td>homePageData</td>
+								<td><input name="homePageData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="home-page-detail" style="display: none;">
+						<h2>Home Page Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------on_line-----</option>
+									   <option value="0">------draft-----</option>
+									</select>
+								</td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="home-page-publish" style="display: none;">
+						<h2>Home Page Publish</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="home-page-publish-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Push notif -->
+					<form id="push-notif-detail" style="display: none;">
+						<h2>Push notif detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="push-notif-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="push-notif-publish" style="display: none;">
+						<h2>Push notif publish</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>pushNotifId</td>
+								<td><input name="pushNotifId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="push-notif-publish-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Customer -->
+					<form id="user-list" style="display: none;">
+						<h2>User List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>langCode</td>
+								<td>
+									<select id="langCode" name="langCode">
+									   <option value="en_US">------en_US-----</option>
+									</select>
+								</td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<!-- <td>userType</td>
+								<td><input name="userType" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------active-----</option>
+									   <option value="0">------in_active-----</option>
+									</select>
+								</td> -->
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-detail" style="display: none;">
+						<h2>User detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-stamp-history-list" style="display: none;">
+						<h2>User List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-stamp-history-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-redeem-history-list" style="display: none;">
+						<h2>User List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-redeem-history-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-stamp-history-new" style="display: none;">
+						<h2>User Stamp history New</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>type</td>
+								<td>
+									<select id="type" name="type">
+									   <option value="6">------system in -----</option>
+									   <option value="7">------system out -----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>stampQty</td>
+								<td><input name="stampQty" type="text" /></td>
+								<td>remarks</td>
+								<td><input name="remarks" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-stamp-history-new-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Report -->
+					<form id="user-report" style="display: none;">
+						<h2>User Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" value="id"/></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" value="0"/></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" value="10"/></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>userType</td>
+								<td><input name="userType" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------active-----</option>
+									   <option value="0">------in_active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-report-export" style="display: none;" action="/tcc_cms/exportUserReport">
+						<h2>User Report Export</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>userType</td>
+								<td><input name="userType" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------active-----</option>
+									   <option value="0">------in_active-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-report-export-button" type="submit" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-reservation-report" style="display: none;">
+						<h2>User Reservation Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" value="id"/></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" value="0"/></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" value="10"/></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-reservation-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="collect-stamps-report" style="display: none;">
+						<h2>Collect Stamps Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" value="id"/></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" value="0"/></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" value="10"/></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="collect-stamps-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="transfer-stamps-report" style="display: none;">
+						<h2>Transfer Stamps Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" value="id"/></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" value="0"/></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" value="10"/></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="transfer-stamps-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="redemption-report" style="display: none;">
+						<h2>Redemption Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" value="id"/></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" value="0"/></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" value="10"/></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>endTime</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="redemption-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="campaign-report" style="display: none;">
+						<h2>Campaign Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="campaign-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Merchant config -->
+					<form id="merchant-config-info" style="display: none;">
+						<h2>Push notif detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-info-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="update-merchant-config" style="display: none;">
+						<h2>Push notif publish</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="update-merchant-config-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Monitor -->
+					<form id="monitor-api" style="display: none;">
+						<h2>Monitor api</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td colspan="6">
+									<input id="monitor-api-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="monitor-db" style="display: none;">
+						<h2>Monitor db</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td colspan="6">
+									<input id="monitor-db-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="monitor-redis" style="display: none;">
+						<h2>Monitor redis</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td colspan="6">
+									<input id="monitor-redis-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					
+					<!-- Keeper User -->
+					<form id="keeper-user-list" style="display: none;">
+						<h2>Keeper User List</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="keeper-user-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="keeper-user-add" style="display: none;">
+						<h2>Keeper User Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>storeId</td>
+								<td><input name="storeId" type="text" /></td>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+							</tr>
+							<tr>
+								<td>email</td>
+								<td><input name="email" type="text" /></td>
+								<td>mobile</td>
+								<td><input name="mobile" type="text" /></td>
+								<td>staffId</td>
+								<td><input name="staffId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------active-----</option>
+									   <option value="0">------inactive-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="keeper-user-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="keeper-user-update" style="display: none;">
+						<h2>Keeper User Update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>storeId</td>
+								<td><input name="storeId" type="text" /></td>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------active-----</option>
+									   <option value="0">------inactive-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>email</td>
+								<td><input name="email" type="text" /></td>
+								<td>mobile</td>
+								<td><input name="mobile" type="text" /></td>
+								<td>staffId</td>
+								<td><input name="staffId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="keeper-user-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="keeper-user-detail" style="display: none;">
+						<h2>Keeper User Detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="keeper-user-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					
+					<!-- Stamp adjust reason -->
+					<form id="stamp-adjust-reason-list" style="display: none;">
+						<h2>Stamp adjust reason list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-adjust-reason-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-adjust-reason-add" style="display: none;">
+						<h2>Stamp Adjust Reason Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-adjust-reason-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-adjust-reason-detail" style="display: none;">
+						<h2>Stamp Adjust Reason detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-adjust-reason-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-adjust-reason-update" style="display: none;">
+						<h2>Stamp Adjust Reason update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+								<td>langData</td>
+								<td><input name="langData" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-adjust-reason-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="stamp-adjust-reason-delete" style="display: none;">
+						<h2>Stamp Adjust Reason Delete</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>ids</td>
+								<td><input name="ids" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="stamp-adjust-reason-delete-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- Merchant config -->
+					<form id="merchant-config-list" style="display: none;">
+						<h2>Merchant Config list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-config-add" style="display: none;">
+						<h2>Merchant Config Add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td>pushProjectId</td>
+								<td><input name="pushProjectId" type="text" /></td>
+								<td>emailHost</td>
+								<td><input name="emailHost" type="text" /></td>
+								<td>emailPort</td>
+								<td><input name="emailPort" type="text" /></td>
+							</tr>
+							<tr>
+								<td>emailUserName</td>
+								<td><input name="emailUserName" type="text" /></td>
+								<td>emailPassword</td>
+								<td><input name="emailPassword" type="text" /></td>
+								<td>emailSmtpAuth</td>
+								<td>
+									<select id="emailSmtpAuth" name="emailSmtpAuth">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>emailSmtpStsEnable</td>
+								<td>
+									<select id="emailSmtpStsEnable" name="emailSmtpStsEnable">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+								<td>emailSmtpStsRequired</td>
+								<td>
+									<select id="emailSmtpStsRequired" name="emailSmtpStsRequired">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+								<td>emailFromNick</td>
+								<td><input name="emailFromNick" type="text" /></td>
+							</tr>
+							<tr>
+								<td>emailFrom</td>
+								<td><input name="emailFrom" type="text" /></td>
+								<td>supportEmailFrom</td>
+								<td><input name="supportEmailFrom" type="text" /></td>
+								<td>webDomain</td>
+								<td><input name="webDomain" type="text" /></td>
+							</tr>
+							<tr>
+								<td>apiDomain</td>
+								<td><input name="apiDomain" type="text" /></td>
+								<td>reservationPushTemplate</td>
+								<td><input name="reservationPushTemplate" type="text" /></td>
+								<td>registerVerifyEmailTemplate</td>
+								<td><input name="registerVerifyEmailTemplate" type="text" /></td>
+							</tr>
+							<tr>
+								<td>resetPasswordEmailTemplate</td>
+								<td><input name="resetPasswordEmailTemplate" type="text" /></td>
+								<td>iquiryEmailTemplate</td>
+								<td><input name="iquiryEmailTemplate" type="text" /></td>
+								<td>shareTemplate</td>
+								<td><input name="shareTemplate" type="text" /></td>
+							</tr>
+							<tr>
+								<td>shareDefalutTitle</td>
+								<td><input name="shareDefalutTitle" type="text" /></td>
+								<td>shareDefalutDescr</td>
+								<td><input name="shareDefalutDescr" type="text" /></td>
+								<td>shareDefalutImage</td>
+								<td><input name="shareDefalutImage" type="text" /></td>
+							</tr>
+							<tr>
+								<td>imgDomain</td>
+								<td><input name="imgDomain" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-config-detail" style="display: none;">
+						<h2>Merchant Config detail</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-detail-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-config-update" style="display: none;">
+						<h2>Merchant Config update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>id</td>
+								<td><input name="id" type="text" /></td>
+							</tr>
+							<tr>
+								<td>pushProjectId</td>
+								<td><input name="pushProjectId" type="text" /></td>
+								<td>emailHost</td>
+								<td><input name="emailHost" type="text" /></td>
+								<td>emailPort</td>
+								<td><input name="emailPort" type="text" /></td>
+							</tr>
+							<tr>
+								<td>emailUserName</td>
+								<td><input name="emailUserName" type="text" /></td>
+								<td>emailPassword</td>
+								<td><input name="emailPassword" type="text" /></td>
+								<td>emailSmtpAuth</td>
+								<td>
+									<select id="emailSmtpAuth" name="emailSmtpAuth">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>emailSmtpStsEnable</td>
+								<td>
+									<select id="emailSmtpStsEnable" name="emailSmtpStsEnable">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+								<td>emailSmtpStsRequired</td>
+								<td>
+									<select id="emailSmtpStsRequired" name="emailSmtpStsRequired">
+									   <option value="false">------True-----</option>
+									   <option value="true">------False-----</option>
+									</select>
+								</td>
+								<td>emailFromNick</td>
+								<td><input name="emailFromNick" type="text" /></td>
+							</tr>
+							<tr>
+								<td>emailFrom</td>
+								<td><input name="emailFrom" type="text" /></td>
+								<td>supportEmailFrom</td>
+								<td><input name="supportEmailFrom" type="text" /></td>
+								<td>webDomain</td>
+								<td><input name="webDomain" type="text" /></td>
+							</tr>
+							<tr>
+								<td>apiDomain</td>
+								<td><input name="apiDomain" type="text" /></td>
+								<td>reservationPushTemplate</td>
+								<td><input name="reservationPushTemplate" type="text" /></td>
+								<td>registerVerifyEmailTemplate</td>
+								<td><input name="registerVerifyEmailTemplate" type="text" /></td>
+							</tr>
+							<tr>
+								<td>resetPasswordEmailTemplate</td>
+								<td><input name="resetPasswordEmailTemplate" type="text" /></td>
+								<td>iquiryEmailTemplate</td>
+								<td><input name="iquiryEmailTemplate" type="text" /></td>
+								<td>shareTemplate</td>
+								<td><input name="shareTemplate" type="text" /></td>
+							</tr>
+							<tr>
+								<td>shareDefalutTitle</td>
+								<td><input name="shareDefalutTitle" type="text" /></td>
+								<td>shareDefalutDescr</td>
+								<td><input name="shareDefalutDescr" type="text" /></td>
+								<td>shareDefalutImage</td>
+								<td><input name="shareDefalutImage" type="text" /></td>
+							</tr>
+							<tr>
+								<td>imgDomain</td>
+								<td><input name="imgDomain" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="merchant-config-cache-update" style="display: none;">
+						<h2>Merchant Config Cache update</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>userName</td>
+								<td><input name="userName" type="text" /></td>
+								<td>password</td>
+								<td><input name="password" type="text" /></td>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="merchant-config-cache-update-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<!-- User Coupon -->
+					<form id="user-coupon-list" style="display: none;">
+						<h2>User Coupon list</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+								<td>status</td>
+								<td><input name="status" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-coupon-list-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-coupon-add" style="display: none;">
+						<h2>User Coupon add</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+								<td>couponId</td>
+								<td><input name="couponId" type="text" /></td>
+								<td>qty</td>
+								<td><input name="qty" type="text" /></td>
+							</tr>
+							<tr>
+								<td>remark</td>
+								<td><input name="remark" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-coupon-add-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-coupon-revoke" style="display: none;">
+						<h2>User Coupon revoke</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>customerId</td>
+								<td><input name="customerId" type="text" /></td>
+								<td>userCouponId</td>
+								<td><input name="userCouponId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-coupon-revoke-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-coupon-collect-report" style="display: none;">
+						<h2>User Coupon Collect Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>"endTime"</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+								<td>status</td>
+								<td>
+									<select id="status" name="status">
+									   <option value="1">------Active-----</option>
+									   <option value="4">------Inactive-----</option>
+									   <option value="2">------Redeemed-----</option>
+									   <option value="3">------Expired-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-coupon-collect-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					
+					<form id="user-coupon-redeem-report" style="display: none;">
+						<h2>User Coupon Redeem Report</h2>
+						<table border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								<td>userId</td>
+								<td><input name="userId" type="text" /></td>
+								<td>session</td>
+								<td><input name="session" type="text" /></td>
+								<td>lang</td>
+								<td>
+									<select id="lang" name="lang">
+									   <option value="en_US">------en_US-----</option>
+									   <option value="zh_CN">------zh_CN-----</option>
+									   <option value="zh_HK">------zh_HK-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>sortField</td>
+								<td><input name="sortField" type="text" /></td>
+								<td>startRow</td>
+								<td><input name="startRow" type="text" /></td>
+								<td>sortType</td>
+								<td>
+									<select id="sortType" name="sortType">
+									   <option value="DESC">------DESC-----</option>
+									   <option value="ASC">------ASC-----</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>maxRows</td>
+								<td><input name="maxRows" type="text" /></td>
+								<td>startTime</td>
+								<td><input name="startTime" type="text" /></td>
+								<td>"endTime"</td>
+								<td><input name="endTime" type="text" /></td>
+							</tr>
+							<tr>
+								<td>merchantId</td>
+								<td><input name="merchantId" type="text" /></td>
+								<td>campaignId</td>
+								<td><input name="campaignId" type="text" /></td>
+							</tr>
+							<tr>
+								<td colspan="6">
+									<input id="user-coupon-redeem-report-button" type="button" value="submit" />
+								</td>
+							</tr>
+						</table>
+					</form>
+					<!-- ***********************    test api end     ***************************** -->
+				</fieldset>
+			</div>
+			
+			<div class="content-view">
+			    <fieldset>
+					<legend>Response view</legend>
+					<div id="view" style="height: 350px;overflow-y:auto;background-color: #F0F0F0;"></div>
+				</fieldset>
+				<div class="spend">Spend: <span id="spend" >0</span> ms</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
