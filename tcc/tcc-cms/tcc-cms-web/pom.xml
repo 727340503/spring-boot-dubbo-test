@@ -100,6 +100,26 @@
             </exclusions>
         </dependency>
         
+        <dependency>
+            <groupId>com.cherrypicks.tcc.dubbo</groupId>
+            <artifactId>tcc-cms-campaign-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+            		<exclusion>
+			    		<groupId>org.springframework.boot</groupId>
+			       	<artifactId>spring-boot-starter-jdbc</artifactId>
+            		</exclusion>
+            		<exclusion>
+			            <groupId>org.springframework.boot</groupId>
+			            <artifactId>spring-boot-starter-data-redis</artifactId>
+            		</exclusion>
+            		<exclusion>
+			            <groupId>mysql</groupId>
+			            <artifactId>mysql-connector-java</artifactId>
+            		</exclusion>
+            </exclusions>
+        </dependency>
+        
     </dependencies>
 
     <build>
@@ -123,11 +143,32 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.3</version>
                     <configuration>
                         <packagingExcludes>${packaging.excludes}</packagingExcludes>
                     </configuration>
                 </plugin>
+                
+                 <!-- 打包版本控制工具 -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+				</plugin>
+				<!-- 打包工具 -->
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<executions>
+						<execution>
+							<goals>
+								<goal>repackage</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
             </plugins>
         </pluginManagement>
         <resources>
@@ -152,25 +193,6 @@
           	<activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <build>
-            		<plugins>
-            			<plugin>
-            				<groupId>org.codehaus.mojo</groupId>  
-					    <artifactId>exec-maven-plugin</artifactId>  
-            				<executions>  
-					      	<execution>  
-					       		<phase>test</phase>  
-					       		<goals>  
-					        			<goal>java</goal>  
-					       		</goals>  
-					       		<configuration>  
-					        			<mainClass>com.cherrypicks.tcc.cms.api.GentratorProjectVersion</mainClass>
-					       		</configuration>  
-					      	</execution>  
-					     </executions> 
-            			</plugin>
-            		</plugins>
-            </build>
         </profile>
 
         <profile>

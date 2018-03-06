@@ -128,6 +128,8 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 		        .excludePathPatterns("/apiRedisMonitor.do")
 
 		        .excludePathPatterns("/private/*")//提供给模块使用的api
+
+		        .excludePathPatterns("/*Monitor")//提供给模块使用的api
 		        
 		        .excludePathPatterns("/error");
 
@@ -151,6 +153,8 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 		        .excludePathPatterns("/updateMerchantConfigCache")
 		        
 		        .excludePathPatterns("/private/*")//提供给模块使用的api
+		        
+		        .excludePathPatterns("/*Monitor")//提供给模块使用的api
 		        
 		        .excludePathPatterns("/apiMonitor.do")
 		        .excludePathPatterns("/apiDBMonitor.do")

@@ -14,19 +14,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		
+
 		<dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
-		
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
 		<!-- hot deploy -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <optional>true</optional>
-        </dependency>
-		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- dubbo -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -44,35 +44,34 @@
 			<artifactId>zookeeper</artifactId>
 			<version>${org.apache.zookeeper.version}</version>
 			<exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.github.sgroschupf</groupId>
 			<artifactId>zkclient</artifactId>
 			<version>${com.github.sgroschupf.zkclient.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.cherrypicks.tcc.dubbo</groupId>
 			<artifactId>tcc-cms-merchant-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.cherrypicks.tcc.dubbo</groupId>
 			<artifactId>tcc-cms-system-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-	
 	<build>
 		<!-- war file name -->
 		<finalName>tcc_cms_merchant</finalName>
@@ -131,57 +130,70 @@
 			</resource>
 		</resources>
 	</build>
-	
-	<profiles>
-        <profile>
-            <id>localhost</id>
-            <properties>
-                <packaging.excludes>
-                    **/application-dev.properties,
-                    **/application-uat.properties,
-                    **/application-prod.properties
-                </packaging.excludes>            
-                <filters.env>localhost</filters.env>
-            </properties>
-          	<activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
 
-        <profile>
-            <id>dev</id>
-            <properties>
-                <packaging.excludes>
-                    **/application-localhost.properties,
-                    **/application-uat.properties,
-                    **/application-prod.properties
-                </packaging.excludes>
-                <filters.env>dev</filters.env>
-            </properties>
-        </profile>
-        
-        <profile>
-            <id>uat</id>
-            <properties>
-                <packaging.excludes>
-                    **/application-localhost.properties,
-                    **/application-dev.properties,
-                    **/application-prod.properties
-                </packaging.excludes>
-                <filters.env>uat</filters.env>
-            </properties>
-        </profile>
-        
-        <profile>
-            <id>prod</id>
-            <properties>
-                <packaging.excludes>
-                    **/application-localhost.properties,
-                    **/application-dev.properties,
-                    **/application-uat.properties
-                </packaging.excludes>
-                <filters.env>prod</filters.env>
-            </properties>
-        </profile>
-    </profiles>
+
+	<profiles>
+		<profile>
+			<id>localhost</id>
+			<properties>
+				<packaging.excludes>
+					**/application-dev.properties,
+					**/application-uat.properties,
+					**/application-prod.properties,
+					dubbo/dev.properties,
+					dubbo/uat.properties,
+					dubbo/prod.properties
+				</packaging.excludes>
+				<filters.env>localhost</filters.env>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+
+		<profile>
+			<id>dev</id>
+			<properties>
+				<packaging.excludes>
+					**/application-localhost.properties,
+					**/application-uat.properties,
+					**/application-prod.properties,
+					dubbo/localhost.properties,
+					dubbo/uat.properties,
+					dubbo/prod.properties
+				</packaging.excludes>
+				<filters.env>dev</filters.env>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>uat</id>
+			<properties>
+				<packaging.excludes>
+					**/application-localhost.properties,
+					**/application-dev.properties,
+					**/application-prod.properties,
+					dubbo/localhost.properties,
+					dubbo/dev.properties,
+					dubbo/prod.properties
+				</packaging.excludes>
+				<filters.env>uat</filters.env>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>prod</id>
+			<properties>
+				<packaging.excludes>
+					**/application-localhost.properties,
+					**/application-dev.properties,
+					**/application-uat.properties,
+					dubbo/localhost.properties,
+					dubbo/dev.properties,
+					dubbo/uat.properties
+				</packaging.excludes>
+				<filters.env>prod</filters.env>
+			</properties>
+		</profile>
+	</profiles>
 </project>

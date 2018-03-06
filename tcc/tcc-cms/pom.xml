@@ -20,5 +20,6 @@
 		<module>tcc-cms-system</module>
 		<module>tcc-cms-merchant</module>
 		<module>tcc-cms-campaign</module>
+		<module>tcc-cms-web</module>
 	</modules>
 </project>

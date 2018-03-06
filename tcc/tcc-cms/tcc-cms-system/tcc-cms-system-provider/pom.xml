@@ -77,7 +77,7 @@
 	</dependencies>
 	<build>
 		<!-- war file name -->
-		<finalName>tcc_cms</finalName>
+		<finalName>tcc_cms_system</finalName>
 		
 		<pluginManagement>
 			<plugins>

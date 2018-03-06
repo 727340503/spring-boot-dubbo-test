@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration>
-	<!-- 配置 push message 记录日志 -->
-	<property name="PUSH_LOG_HOME" value="/data/log/push" />
-	<property name="PUSH_LOG_MAX_HISTORY" value="30" />
-	
-	<appender name="PUSH-FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${PUSH_LOG_HOME}/push_message.log</file>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-        </filter>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%msg - %d{yyyy-MM-dd HH:mm:ss}%n</Pattern>
-        </encoder>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- rollover daily -->
-            <fileNamePattern>${PUSH_LOG_HOME}/history/push_message_%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>${PUSH_LOG_MAX_HISTORY}</maxHistory>
-        </rollingPolicy>
-    </appender>
-	
 	<!-- 记录其他日志 -->
     <property name="LOG_HOME" value="/data/log" />
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -30,7 +10,7 @@
     </appender>
 
     <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/tcc-cms-api-all.log</file>
+        <file>${LOG_HOME}/tcc-cms-system-all.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>DEBUG</level>
         </filter>
@@ -40,7 +20,7 @@
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${LOG_HOME}/archived/tcc-cms-api-all.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/archived/tcc-cms-system-all.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
@@ -48,7 +28,7 @@
     </appender>
 
     <appender name="FILE-ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/tcc-cms-api-error.log</file>
+        <file>${LOG_HOME}/tcc-cms-system-error.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
@@ -60,7 +40,7 @@
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${LOG_HOME}/archived/tcc-cms-api-error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/archived/tcc-cms-system-error.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
@@ -71,13 +51,6 @@
         <appender-ref ref="FILE-AUDIT" />
         <appender-ref ref="STDOUT" />
     </logger>
-
-    <!--
-    <logger name="org.apache.http" level="debug">
-        <appender-ref ref="FILE-AUDIT" />
-        <appender-ref ref="STDOUT" />
-    </logger>
-     -->
 
     <logger name="org.apache" level="info">
         <appender-ref ref="FILE-AUDIT" />
@@ -96,10 +69,6 @@
 
     <logger name="org.springframework.boot.context.web.ErrorPageFilter">
         <level value="OFF" />
-    </logger>
-    
-     <logger name="com.cherrypicks.tcc.cms.service.push" level="info">
-        <appender-ref ref="PUSH-FILE-AUDIT" />
     </logger>
     
     <logger name="com.alibaba.dubbo" additivity="true" level="ERROR" />
