@@ -25,7 +25,7 @@ import com.cherrypicks.tcc.util.I18nUtil;
 @RestController
 public class SystemUserController extends BaseController<SystemUser>{
 	
-	@Reference(version="1.0")
+	@Reference
 	private SystemUserService systemUserService;
 	
 	@Reference(version="1.0")

@@ -9,12 +9,6 @@
 	<artifactId>tcc-cms</artifactId>
 	<packaging>pom</packaging>
 	
-	<properties>
-        <com.alibaba.dubbo.version>2.5.8</com.alibaba.dubbo.version>  
-        <org.apache.zookeeper.version>3.4.6</org.apache.zookeeper.version>
-        <com.github.sgroschupf.zkclient.version>0.1</com.github.sgroschupf.zkclient.version>
-    </properties>
-	
 	<modules>
 		<module>tcc-cms-base</module>
 		<module>tcc-cms-system</module>
