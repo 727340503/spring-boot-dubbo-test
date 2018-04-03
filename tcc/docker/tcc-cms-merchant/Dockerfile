@@ -1,4 +1,4 @@
-FROM qtsashoppo.azurecr.io/cherrypicks/tomcat:8
+FROM qtsashoppo.azurecr.io/cherrypicks/tomcat:8.0
 
 MAINTAINER Rahul rui <rahulrui@ideaculture.com>
 
