@@ -4,7 +4,7 @@ MAINTAINER Rahul rui <rahulrui@ideaculture.com>
 
 WORKDIR /app
 
-COPY ../../tcc-cms/tcc-cms-campaign/tcc-cms-campaign-provider/target/tcc_cms_campaign.war /app/tomcat/webapps/
+COPY ../tcc-cms/tcc-cms-campaign/tcc-cms-campaign-provider/target/tcc_cms_campaign.war /app/tomcat/webapps/
 
 EXPOSE 8080
 
